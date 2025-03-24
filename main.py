@@ -1,6 +1,5 @@
-# uvicorn main:app --reload
-
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import openai
 import json
@@ -18,6 +17,15 @@ if not OPENAI_API_KEY:
 openai.api_key = OPENAI_API_KEY
 
 app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Allow requests from Vite dev server
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Request model for project generation
 class ProjectRequest(BaseModel):
@@ -65,17 +73,18 @@ async def generate_project(request: ProjectRequest):
         '  ]\n'
         "}"
     )
-
+    
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that generates detailed project ideas."},
-                {"role": "user", "content": prompt}
-            ]
+            messages=[{"role": "system", "content": "You are a helpful assistant that generates detailed project ideas."},
+                      {"role": "user", "content": prompt}]
         )
 
         openai_text = response['choices'][0]['message']['content']
+        
+        # Log the response to see what OpenAI actually returns
+        print("OpenAI Response:", openai_text)  # Add this line for debugging
 
         # Convert OpenAI response directly to JSON
         project_ideas = json.loads(openai_text).get("project_ideas", [])
