@@ -61,7 +61,7 @@ def parse_openai_response(response_text: str):
 async def generate_project(request: ProjectRequest):
     prompt = (
         f"Generate two {request.difficulty} {request.project_type} project ideas using {', '.join(request.languages)}. "
-        "Respond in JSON format with the structure: \n"
+        "Respond ONLY in valid JSON format with the following structure:\n"
         "{\n"
         '  "project_ideas": [\n'
         '    { "title": "Project Title", "short_description": "A short summary", '
@@ -71,8 +71,10 @@ async def generate_project(request: ProjectRequest):
         '      "long_description": "A detailed description", "tech_stack": ["Tech1", "Tech2"], '
         '      "implementation_instructions": "Step-by-step implementation" }\n'
         '  ]\n'
-        "}"
+        "}\n"
+        "DO NOT include any explanations, only return JSON."
     )
+
     
     try:
         response = openai.ChatCompletion.create(
